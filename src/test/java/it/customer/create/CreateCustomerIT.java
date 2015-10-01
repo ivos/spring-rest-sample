@@ -1,29 +1,32 @@
 package it.customer.create;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
 import org.junit.Test;
+
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.http.ContentType;
+
+import it.support.Support;
 
 public class CreateCustomerIT {
 
+	String URL = Support.urlBase() + "customers";
+
 	@Test
-	public void fn() throws ClientProtocolException, IOException {
-		String request = IOUtils.toString(getClass().getResourceAsStream("request.json"), "UTF-8");
-		HttpResponse response = Request.Post("http://localhost:8080/customers")
-				.bodyString(request, ContentType.APPLICATION_JSON).execute().returnResponse();
-		assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-		assertEquals(ContentType.APPLICATION_JSON.toString(), response.getEntity().getContentType().getValue());
-		String expected = IOUtils.toString(getClass().getResourceAsStream("response.json"), "UTF-8");
-		String actual = IOUtils.toString(response.getEntity().getContent(), "UTF-8");
-		assertEquals(expected, actual);
+	public void fn() {
+		String request = Support.loadRequest(this, "fn");
+		String response = Support.loadResponse(this, "fn");
+		RestAssured.given().contentType(ContentType.JSON).body(request).when().post(URL).then()
+				.statusCode(HttpStatus.SC_CREATED).contentType(ContentType.JSON).body(Support.equalTo(response));
+	}
+
+	@Test
+	public void val_Empty() {
+		String request = Support.loadRequest(this, "val_Empty");
+		String response = Support.loadResponse(this, "val_Empty");
+		RestAssured.given().contentType(ContentType.JSON).body(request).when().post(URL).then()
+				.statusCode(HttpStatus.SC_UNPROCESSABLE_ENTITY).contentType(ContentType.JSON)
+				.body(Support.equalTo(response));
 	}
 
 }

@@ -6,7 +6,10 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.github.ivos.springrest.ValidationErrors;
 
 @Service
 public class CustomerService {
@@ -14,6 +17,12 @@ public class CustomerService {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private final List<Customer> customers;
+
+	@Autowired
+	private CustomerValidator customerValidator;
+
+	@Autowired
+	private ValidationErrors errors;
 
 	public CustomerService() {
 		String data = "1 Jack Bauer,2 Chloe O'Brian,3 Kim Bauer,4 David Palmer,5 Michelle Dessler";
@@ -36,9 +45,14 @@ public class CustomerService {
 		customer.setId(maxId + 1);
 		customer.setFirstName(dto.firstName);
 		customer.setLastName(dto.lastName);
-		logger.debug("> Created customer {}.", customer);
+
+		customerValidator.validate(customer);
+		errors.verify();
+
 		// disable to make simplistic tests repeatable
 		// customers.add(customer);
+
+		logger.debug("> Created customer {}.", customer);
 		return customer;
 	}
 
